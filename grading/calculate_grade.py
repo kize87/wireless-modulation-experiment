@@ -16,6 +16,7 @@ def run_pytest(test_file, test_name):
             [sys.executable, '-m', 'pytest', test_file, '-v', '--tb=short', '--json-report', '--json-report-file=temp_report.json'],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=60
         )
         
@@ -66,6 +67,7 @@ def calculate_grade():
             [sys.executable, 'src/test_environment.py'],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=30
         )
         if result.returncode == 0:
@@ -130,6 +132,7 @@ def calculate_grade():
             [sys.executable, 'grading/check_report.py'],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=10
         )
         # 从输出中提取分数
@@ -154,6 +157,7 @@ def calculate_grade():
             [sys.executable, '-m', 'pylint', 'src/modulation.py', '--score=y'],
             capture_output=True,
             text=True,
+            encoding='utf-8',
             timeout=30
         )
         
