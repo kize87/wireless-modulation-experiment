@@ -17,6 +17,7 @@ def run_pytest(test_file, test_name):
             capture_output=True,
             text=True,
             encoding='utf-8',
+            env=dict(os.environ, PYTHONIOENCODING='utf-8'),
             timeout=60
         )
         
@@ -68,6 +69,7 @@ def calculate_grade():
             capture_output=True,
             text=True,
             encoding='utf-8',
+            env=dict(os.environ, PYTHONIOENCODING='utf-8'),
             timeout=30
         )
         if result.returncode == 0:
@@ -76,9 +78,9 @@ def calculate_grade():
         else:
             env_score = 0
             print("  ❌ 环境测试失败: 0分")
-    except:
+    except Exception as e:
         env_score = 0
-        print("  ❌ 环境测试失败: 0分")
+        print(f"  ❌ 环境测试失败: {e}")
     
     total_score += env_score
     print()
@@ -133,6 +135,7 @@ def calculate_grade():
             capture_output=True,
             text=True,
             encoding='utf-8',
+            env=dict(os.environ, PYTHONIOENCODING='utf-8'),
             timeout=10
         )
         # 从输出中提取分数
@@ -143,9 +146,9 @@ def calculate_grade():
         else:
             report_score = 0
         print(f"  报告得分: {report_score}/15")
-    except:
+    except Exception as e:
         report_score = 0
-        print("  ❌ 报告检查失败: 0分")
+        print(f"  ❌ 报告检查失败: {e}")
     
     total_score += report_score
     print()
@@ -158,6 +161,7 @@ def calculate_grade():
             capture_output=True,
             text=True,
             encoding='utf-8',
+            env=dict(os.environ, PYTHONIOENCODING='utf-8'),
             timeout=30
         )
         
