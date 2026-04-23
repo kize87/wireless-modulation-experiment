@@ -32,32 +32,32 @@ def test_ber_performance(modulation_scheme='BPSK', num_bits=10000, snr_range=Non
     print(f"比特数: {num_bits}, SNR范围: {snr_range[0]}~{snr_range[-1]} dB")
     print("-" * 40)
     
-    # 选择调制/解调函数
+    # 选择调制/解调函数与每符号比特数
     if modulation_scheme == 'BPSK':
         modulate_func = bpsk_modulate
         demodulate_func = bpsk_demodulate
+        bits_per_symbol = 1
     elif modulation_scheme == 'QPSK':
         modulate_func = qpsk_modulate
         demodulate_func = qpsk_demodulate
+        bits_per_symbol = 2
     elif modulation_scheme == '16QAM':
         modulate_func = qam16_modulate
         demodulate_func = qam16_demodulate
+        bits_per_symbol = 4
     else:
         raise ValueError(f"不支持的调制方式: {modulation_scheme}")
+
+    # 调整比特数，避免不满足分组长度导致调制函数报错
+    effective_bits = (num_bits // bits_per_symbol) * bits_per_symbol
+    if effective_bits <= 0:
+        raise ValueError("num_bits过小，无法满足当前调制方式的分组要求")
+    if effective_bits != num_bits:
+        print(f"提示: {modulation_scheme} 需要{bits_per_symbol}比特分组，实际使用 {effective_bits} 比特")
     
     # 对每个SNR值进行测试
     for snr_db in snr_range:
-        # TODO: 完成性能测试的主循环
-        # 提示步骤：
-        # 1. 生成随机比特序列
-        # 2. 调制
-        # 3. 添加AWGN噪声
-        # 4. 解调
-        # 5. 计算BER
-        # 6. 将BER添加到ber_values列表
-        
-        # 你的代码：
-        bits_tx = generate_random_bits(num_bits)
+        bits_tx = generate_random_bits(effective_bits)
         symbols = modulate_func(bits_tx)
         symbols_rx = add_awgn(symbols, snr_db)
         bits_rx = demodulate_func(symbols_rx)
@@ -80,12 +80,6 @@ def compare_modulations():
     print("=" * 50)
     
     snr_range = np.arange(0, 16, 2)
-    
-    # TODO: 测试各种调制方式并绘制对比图
-    # 提示：
-    # 1. 分别测试BPSK、QPSK、16-QAM
-    # 2. 收集所有的BER数据
-    # 3. 在一张图上绘制多条曲线
     
     try:
         # 测试BPSK

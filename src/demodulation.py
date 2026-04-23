@@ -35,10 +35,10 @@ def bpsk_demodulate(symbols):
         [0 1 0]
     """
     
-    # TODO: 实现BPSK解调
-    # 提示：使用np.real()获取实部，然后判断正负
-    
-    raise NotImplementedError("请实现BPSK解调函数")
+    # 取实部并按照判决准则恢复比特：实部>0判为0，否则判为1
+    real_part = np.real(symbols)
+    bits = np.where(real_part > 0, 0, 1).astype(int)
+    return bits
 
 
 def qpsk_demodulate(symbols):
@@ -80,13 +80,20 @@ def qpsk_demodulate(symbols):
         2: (1 - 1j) / np.sqrt(2)     # 10
     }
     
-    # TODO: 实现QPSK解调
-    # 提示步骤：
-    # 1. 对每个接收符号，计算到4个参考点的欧氏距离
-    # 2. 找到距离最小的参考点
-    # 3. 将参考点的索引转换为2个比特
-    
-    raise NotImplementedError("请实现QPSK解调函数")
+    # 按字典顺序构建参考点数组和对应索引（索引值即2bit整数）
+    indices = np.array(list(constellation.keys()))
+    refs = np.array([constellation[i] for i in indices])
+
+    # 计算每个接收符号到4个参考点的距离，并选择最近点
+    distances = np.abs(symbols[:, np.newaxis] - refs[np.newaxis, :])
+    nearest_pos = np.argmin(distances, axis=1)
+    nearest_idx = indices[nearest_pos]
+
+    # 将十进制索引转换为2比特：0->00, 1->01, 2->10, 3->11
+    bits = np.empty(len(symbols) * 2, dtype=int)
+    bits[0::2] = (nearest_idx >> 1) & 1
+    bits[1::2] = nearest_idx & 1
+    return bits
 
 
 def qam16_demodulate(symbols):
@@ -114,12 +121,40 @@ def qam16_demodulate(symbols):
         < -2/√10 → 10
     """
     
-    # TODO: 实现16-QAM解调
-    # 提示：可以采用两种方法
-    # 方法1：遍历16个参考点，找最小距离（简单但慢）
-    # 方法2：分别判决I路和Q路（快速且实用）
-    
-    raise NotImplementedError("请实现16-QAM解调函数")
+    # 采用I/Q分别判决，判决门限位于 -2/sqrt(10), 0, 2/sqrt(10)
+    threshold = 2 / np.sqrt(10)
+    i_vals = np.real(symbols)
+    q_vals = np.imag(symbols)
+
+    def level_to_bits(x):
+        b0 = np.zeros_like(x, dtype=int)
+        b1 = np.zeros_like(x, dtype=int)
+
+        # > threshold -> 00
+        # 0 ~ threshold -> 01
+        mask_01 = (x > 0) & (x <= threshold)
+        b1[mask_01] = 1
+
+        # -threshold ~ 0 -> 11
+        mask_11 = (x >= -threshold) & (x <= 0)
+        b0[mask_11] = 1
+        b1[mask_11] = 1
+
+        # < -threshold -> 10
+        mask_10 = x < -threshold
+        b0[mask_10] = 1
+
+        return b0, b1
+
+    i_b0, i_b1 = level_to_bits(i_vals)
+    q_b0, q_b1 = level_to_bits(q_vals)
+
+    bits = np.empty(len(symbols) * 4, dtype=int)
+    bits[0::4] = i_b0
+    bits[1::4] = i_b1
+    bits[2::4] = q_b0
+    bits[3::4] = q_b1
+    return bits
 
 
 def test_demodulation():
